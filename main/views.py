@@ -52,8 +52,11 @@ class SignupView(APIView):
 
 class UsersView(APIView):
     def get(self, request, id):
-        values = request.META["HTTP_AUTHORIZATION"].split(' ')
         try:
+            print(dir(request))
+            print(request.META)
+            print(request.META["HTTP_AUTHORIZATION"])
+            values = request.META["HTTP_AUTHORIZATION"].split(' ')
             if values[0] != "Basic":
                 raise Exception()
             user_id, password = base64.b64decode(
@@ -82,8 +85,11 @@ class UsersView(APIView):
         return Response(res)
 
     def patch(self, request, id):
-        values = request.META["HTTP_AUTHORIZATION"].split(' ')
         try:
+            print(dir(request))
+            print(request.META)
+            print(request.META["HTTP_AUTHORIZATION"])
+            values = request.META["HTTP_AUTHORIZATION"].split(' ')
             if values[0] != "Basic":
                 raise Exception()
             user_id, password = base64.b64decode(
@@ -143,11 +149,11 @@ class UsersView(APIView):
 
 class CloseView(APIView):
     def post(self, request):
-        print(dir(request))
-        print(request.META)
-        print(request.META["HTTP_AUTHORIZATION"])
-        values = request.META["HTTP_AUTHORIZATION"].split(' ')
         try:
+            print(dir(request))
+            print(request.META)
+            print(request.META["HTTP_AUTHORIZATION"])
+            values = request.META["HTTP_AUTHORIZATION"].split(' ')
             if values[0] != "Basic":
                 raise Exception()
             user_id, password = base64.b64decode(
