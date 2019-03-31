@@ -8,6 +8,7 @@ from .models import User
 
 class SignupView(APIView):
     def post(self, request):
+        print(request.data)
         failed_message = {
             "message": "Account creation failed",
             "cause": "required user_id and password"
@@ -85,6 +86,7 @@ class UsersView(APIView):
         return Response(res)
 
     def patch(self, request, id):
+        print(request.data)
         try:
             print(dir(request))
             print(request.META)
@@ -149,6 +151,7 @@ class UsersView(APIView):
 
 class CloseView(APIView):
     def post(self, request):
+        print(request.data)
         try:
             print(dir(request))
             print(request.META)

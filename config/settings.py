@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '@(o)5pq(3(fj#^s_n!vik&e0o@+6ezbjpbf^8(gst@(f+z(rjb'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost", "127.0.0.1", "yusk-recruit-test-02.herokuapp.com"
@@ -127,7 +127,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
 if not DEBUG:
     import django_heroku
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.config()
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     django_heroku.settings(locals())
