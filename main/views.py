@@ -1,4 +1,5 @@
 import base64
+import re
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,37 +7,77 @@ from rest_framework.response import Response
 from .models import User
 
 
+def isalnum(s):
+    # 半角英数字
+    alnumReg = re.compile(r'^[a-zA-Z0-9]+$')
+    return alnumReg.match(s) is not None
+
+
+def isascii(s):
+    # ASCII文字
+    asciiReg = re.compile(r'^[!-~]+$')
+    return asciiReg.match(s) is not None
+
+
+def contain_control_char(s):
+    return re.search(r"[\0-\037]", s)
+
+
+def contain_space(s):
+    return s.find(" ") >= 0
+
+
 class SignupView(APIView):
     def post(self, request):
         print(request.data)
-        failed_message = {
-            "message": "Account creation failed",
-            "cause": "required user_id and password"
-        }
         try:
             user_id = request.data["user_id"]
             password = request.data["password"]
         except Exception:
-            return Response(failed_message, status=400)
+            message = {
+                "message": "Account creation failed",
+                "cause": "required user_id and password"
+            }
+            return Response(message, status=400)
 
         len_user_id = len(user_id)
         len_password = len(password)
         if len_user_id < 6 or 20 < len_user_id:
-            return Response(failed_message, status=400)
+            message = {
+                "message": "Account creation failed",
+                "cause": "bad user_id length"
+            }
+            return Response(message, status=400)
         if len_password < 6 or 20 < len_password:
-            return Response(failed_message, status=400)
+            message = {
+                "message": "Account creation failed",
+                "cause": "bad password length"
+            }
+            return Response(message, status=400)
 
-        # todo: user_id 半角英数字
-        # todo: user_id 半角英数字記号（空白と制御コードを除くASCII文字)
+        if not isalnum(user_id):
+            message = {
+                "message": "Account creation failed",
+                "cause": "bad user_id pattern"
+            }
+            return Response(message, status=400)
+
+        if not isascii(password) or contain_control_char(
+                password) or contain_space(password):
+            message = {
+                "message": "Account creation failed",
+                "cause": "bad password pattern"
+            }
+            return Response(message, status=400)
 
         user = User.objects.filter(user_id=user_id).first()
 
         if user is not None:
-            return Response({
+            message = {
                 "message": "Account creation failed",
                 "cause": "already same user_id is used"
-            },
-                            status=400)
+            }
+            return Response(message, status=400)
 
         user = User.objects.create(
             user_id=user_id, password=password, nickname=user_id)
@@ -47,8 +88,7 @@ class SignupView(APIView):
                 "user_id": user.user_id,
                 "nickname": user.nickname,
             }
-        },
-                        status=200)
+        })
 
 
 class UsersView(APIView):
@@ -101,6 +141,10 @@ class UsersView(APIView):
         except Exception:
             return Response({"message": "Authentication Faild"}, status=401)
 
+        if user_id != id:
+            message = {"message": "No Permission for Update"}
+            return Response(message, status=403)
+
         try:
             user = User.objects.get(user_id=id)
         except Exception:
@@ -120,21 +164,45 @@ class UsersView(APIView):
             },
                             status=400)
 
-        if user_id != id:
-            return Response({
-                "message": "No Permission for Update"
-            },
-                            status=403)
-
         try:
             nickname = request.data["nickname"]
-            user.nickname = nickname
+            if len(nickname) > 30:
+                message = {
+                    "message": "User updation failed",
+                    "cause": "bad nickname length"
+                }
+                return Response(message, status=400)
+            if contain_control_char(nickname):
+                message = {
+                    "message": "User updation failed",
+                    "cause": "bad nickname pattern"
+                }
+                return Response(message, status=400)
+            if nickname == "":
+                user.nickname = user.user_id
+            else:
+                user.nickname = nickname
         except Exception:
             pass
 
         try:
             comment = request.data["comment"]
-            user.comment = comment
+            if len(comment) > 100:
+                message = {
+                    "message": "User updation failed",
+                    "cause": "bad comment length"
+                }
+                return Response(message, status=400)
+            if contain_control_char(comment):
+                message = {
+                    "message": "User updation failed",
+                    "cause": "bad comment pattern"
+                }
+                return Response(message, status=400)
+            if comment == "":
+                user.comment = None
+            else:
+                user.comment = comment
         except Exception:
             pass
 
