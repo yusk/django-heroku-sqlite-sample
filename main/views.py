@@ -64,7 +64,7 @@ class UsersView(APIView):
             return Response({"message": "Authentication Faild"}, status=401)
 
         try:
-            user = User.objects.get(id)
+            user = User.objects.get(user_id=id)
         except Exception:
             return Response({"message": "No User found"}, status=404)
 
@@ -94,14 +94,11 @@ class UsersView(APIView):
             return Response({"message": "Authentication Faild"}, status=401)
 
         try:
-            user = User.objects.get(id)
+            user = User.objects.get(user_id=id)
         except Exception:
             return Response({"message": "No User found"}, status=404)
 
-        try:
-            nickname = request.data["nickname"]
-            comment = request.data["comment"]
-        except Exception:
+        if "nickname" not in request.data and "comment" not in request.data:
             return Response({
                 "message": "User updation failed",
                 "cause": "required nickname or comment"
@@ -121,8 +118,18 @@ class UsersView(APIView):
             },
                             status=403)
 
-        user.nickname = nickname
-        user.comment = comment
+        try:
+            nickname = request.data["nickname"]
+            user.nickname = nickname
+        except Exception:
+            pass
+
+        try:
+            comment = request.data["comment"]
+            user.comment = comment
+        except Exception:
+            pass
+
         user.save()
 
         return Response({
