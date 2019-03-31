@@ -51,7 +51,87 @@ class SignupView(APIView):
 
 
 class UsersView(APIView):
-    pass
+    def get(self, request, id):
+        values = request.META["HTTP_AUTHORIZATION"].split(' ')
+        try:
+            if values[0] != "Basic":
+                raise Exception()
+            user_id, password = base64.b64decode(
+                values[1]).decode("utf8").split(":")
+            print(user_id, password)
+            User.objects.get(user_id=user_id, password=password)
+        except Exception:
+            return Response({"message": "Authentication Faild"}, status=401)
+
+        try:
+            user = User.objects.get(id)
+        except Exception:
+            return Response({"message": "No User found"}, status=404)
+
+        res = {
+            "message": "User details by user_id",
+            "user": {
+                "user_id": user.user_id,
+                "nickname": user.nickname
+            }
+        }
+
+        if user.comment is not None:
+            res["user"]["comment"] = user.comment
+
+        return Response(res)
+
+    def patch(self, request, id):
+        values = request.META["HTTP_AUTHORIZATION"].split(' ')
+        try:
+            if values[0] != "Basic":
+                raise Exception()
+            user_id, password = base64.b64decode(
+                values[1]).decode("utf8").split(":")
+            print(user_id, password)
+            User.objects.get(user_id=user_id, password=password)
+        except Exception:
+            return Response({"message": "Authentication Faild"}, status=401)
+
+        try:
+            user = User.objects.get(id)
+        except Exception:
+            return Response({"message": "No User found"}, status=404)
+
+        try:
+            nickname = request.data["nickname"]
+            comment = request.data["comment"]
+        except Exception:
+            return Response({
+                "message": "User updation failed",
+                "cause": "required nickname or comment"
+            },
+                            status=400)
+
+        if "user_id" in request.data or "password" in request.data:
+            return Response({
+                "message": "User updation failed",
+                "cause": "not updatable user_id and password"
+            },
+                            status=400)
+
+        if user_id != id:
+            return Response({
+                "message": "No Permission for Update"
+            },
+                            status=403)
+
+        user.nickname = nickname
+        user.comment = comment
+        user.save()
+
+        return Response({
+            "message": "User details by user_id",
+            "user": {
+                "nickname": user.nickname,
+                "comment": user.comment
+            }
+        })
 
 
 class CloseView(APIView):
