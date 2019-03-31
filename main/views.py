@@ -141,7 +141,7 @@ class UsersView(APIView):
         user.save()
 
         return Response({
-            "message": "User details by user_id",
+            "message": "User successfully updated",
             "user": {
                 "nickname": user.nickname,
                 "comment": user.comment
